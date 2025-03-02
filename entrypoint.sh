@@ -1,23 +1,19 @@
 #!/bin/bash
+#!/bin/bash
 set -e
 
 echo "Starting VS Code Server with Goose AI..."
 
-# Run the GitHub setup script
 /usr/local/bin/github-setup.sh
 
-# Install VSCode extensions
 echo "Installing Material icon themes..."
 code-server --install-extension PKief.material-icon-theme >/dev/null 2>&1 || echo "Failed to install material-icon-theme extension"
 code-server --install-extension PKief.material-product-icons >/dev/null 2>&1 || echo "Failed to install material-product-icons extension"
 
-# Configure Goose
 echo "Configuring Goose..."
 
-# Create config directory
 mkdir -p $HOME/.config/goose
 
-# Create config file with the exact YAML format
 cat > $HOME/.config/goose/config.yaml << EOF
 GOOSE_PROVIDER: openai
 extensions:
@@ -25,21 +21,28 @@ extensions:
     enabled: true
     name: developer
     type: builtin
+  multi_tool_use:
+    enabled: true
+    name: multi_tool_use
+    type: builtin
 GOOSE_MODE: auto
 GOOSE_MODEL: o3-mini-2025-01-31
 OPENAI_BASE_PATH: v1/chat/completions
 OPENAI_HOST: https://api.openai.com
+GEMINI_API_KEY: your_gemini_api_key_here
 EOF
 
-# Add only the API key to bashrc for persistence
 grep -q "OPENAI_API_KEY" $HOME/.bashrc || {
   echo '
-# Goose API key
+# Goose API keys
 export OPENAI_API_KEY="'$OPENAI_API_KEY'"
+export GEMINI_API_KEY="your_gemini_api_key_here"
 ' >> $HOME/.bashrc
 }
 
 echo "✅ Goose configured successfully with YAML configuration"
+
+# Rest of the script remains the same
 
 # Create workspace README
 if [ ! -f /workspace/README.md ]; then
