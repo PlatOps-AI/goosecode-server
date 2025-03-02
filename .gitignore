@@ -1,0 +1,65 @@
+# Environment variables and secrets
+.env
+*.env
+.env.local
+.env.*.local
+!.env.example
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# VS Code and editor files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+.idea/
+*.sublime-*
+*.swp
+*.swo
+*~
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency directories
+node_modules/
+jspm_packages/
+bower_components/
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+.cache/
+
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Workspace specific
+/workspace/
+/.workspace/
+/data/
+/tmp/
+
+# Security
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.der 
