@@ -1,0 +1,24 @@
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Git files
+.git/
+.gitignore
+
+# Development and IDE files
+.vscode/
+*.log
+*.swp
+*~
+
+# Node modules if any
+node_modules/
+
+# Workspace directory (mounted at runtime)
+workspace/
+
+# Any other sensitive or unnecessary files
+*.pem
+*.key 

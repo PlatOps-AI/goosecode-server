@@ -61,34 +61,6 @@ Welcome to your VS Code Server workspace with Goose AI assistant integration.
    \`\`\`
 3. **Begin collaborating** with Goose by typing your questions or instructions
 
-## Example Goose Prompts
-
-| Task | Example Prompt |
-|------|----------------|
-| Code Generation | "Create a Python script that reads a CSV file and outputs statistics" |
-| Debugging | "Help me debug this JavaScript function: [paste your code]" |
-| Concept Explanation | "Explain how to implement authentication in a React application" |
-| Testing | "Generate unit tests for the following code: [paste your code]" |
-
-## Code Examples with Goose
-
-Here's an example of using Goose to generate a simple Express.js server:
-
-\`\`\`javascript
-const express = require('express');
-const app = express();
-const port = process.env.PORT || 3000;
-
-app.use(express.json());
-
-app.get('/', (req, res) => {
-  res.send('Hello from Goosecode Server!');
-});
-
-app.listen(port, () => {
-  console.log(\`Server running on port \${port}\`);
-});
-\`\`\`
 
 ## Troubleshooting
 

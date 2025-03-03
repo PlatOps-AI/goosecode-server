@@ -3,7 +3,7 @@
 A containerized VS Code server environment with integrated Goose AI coding assistant. This project provides a ready-to-use Docker setup that combines VS Code Server with the Goose AI agent, allowing you to access a powerful coding environment through your browser.
 
 <div align="center">
-  <img src="static/img/logo.png" alt="Goose AI + VS Code Server" width="400">
+  <img src="./static/img/logo.png" alt="Goose AI + VS Code Server" width="400">
 </div>
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -45,9 +45,47 @@ A containerized VS Code server environment with integrated Goose AI coding assis
    - Default password: `vscode-password` (can be changed in .env)
 
 <div align="center">
-  <img src="/static/img/screenshot.png" alt="VS Code Server Screenshot" width="600">
+  <img src="./static/img/screenshot.png" alt="VS Code Server Screenshot" width="600">
   <p><i>Example of the VS Code interface in browser</i></p>
 </div>
+
+## Using the run.sh Script
+
+The `run.sh` script provides a convenient way to manage your Goosecode Server container. It handles building the image, starting/stopping the container, and passing environment variables.
+
+### Basic Usage
+
+```bash
+./run.sh
+```
+
+### Advanced Options
+
+You can pass environment variables and configuration options directly to the script:
+
+```bash
+./run.sh --openai-key=your_api_key_here --password=your_password --port=8888
+```
+
+#### Available Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--rebuild` | Force rebuild of the Docker image | - |
+| `--port=VALUE` | Host port to map to container | 8080 |
+| `--image=VALUE` | Custom Docker image name | goosecode-server |
+| `--container=VALUE` | Custom container name | goosecode-server |
+| `--openai-key=VALUE` | OpenAI API key | From .env |
+| `--password=VALUE` | VS Code Server password | From .env or "vscode-password" |
+| `--github-token=VALUE` | GitHub token | From .env |
+| `--git-user=VALUE` | Git user name | From .env or "PlatOps AI" |
+| `--git-email=VALUE` | Git user email | From .env or "hello@platops.ai" |
+
+### Environment Variables Priority
+
+1. Command-line arguments (highest priority)
+2. Variables from `.env` file
+3. Default values (lowest priority)
 
 ## Using Goose AI Assistant
 
@@ -106,7 +144,7 @@ The VS Code Server instance comes pre-configured with:
 docker build -t goosecode-server .
 ```
 
-### Running the Container
+### Running the Container Manually
 ```bash
 docker run -d -p 8080:8080 --name goosecode-server --env-file .env goosecode-server
 ```
@@ -142,16 +180,17 @@ docker run -d -p 8888:8080 -e PASSWORD="your-secure-password" --name goosecode-s
 |-------|----------|
 | Goose not found | Ensure the installation was successful with `which goose` |
 | Configuration errors | Run `goose configure` to set up the agent manually |
-| API key issues | Verify your OpenAI API key is correctly set in the `.env` file |
+| API key issues | Verify your OpenAI API key is correctly set in the `.env` file or passed via command line |
 | Session errors | Check if your model is supported by running `goose model list` |
 
 ### Container Issues
 
 | Issue | Solution |
 |-------|----------|
-| Port conflicts | Change the port mapping in your docker run command |
+| Port conflicts | Change the port mapping using `--port=VALUE` option |
 | Permission issues | Container uses the `coder` user; use `sudo` for privileged operations |
 | Performance issues | Adjust Docker resource allocation in Docker Desktop settings |
+| Environment variables not working | Check priority order: command line > .env file > defaults |
 
 ---
 
