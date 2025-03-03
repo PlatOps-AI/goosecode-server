@@ -1,6 +1,6 @@
 # Goosecode Server
 
-A containerized VS Code server environment with integrated [Goose AI coding assistant](https://github.com/block/goose). This project provides a ready-to-use Docker setup that combines VS Code Server with the Goose AI agent, allowing you to access a powerful coding environment through your browser.
+A containerized VS Code server environment with integrated [Goose AI coding agent](https://github.com/block/goose). This project provides a ready-to-use Docker setup that combines VS Code Server with the Goose AI agent, allowing you to access a powerful coding environment through your browser.
 
 <div align="center">
   <img src="./static/img/logo.png" alt="Goose AI + VS Code Server" width="400">
@@ -14,18 +14,19 @@ A containerized VS Code server environment with integrated [Goose AI coding assi
 ## Features
 
 - **Browser-Based Development**: Access VS Code directly from your browser
-- **Goose AI Assistant**: Pre-configured AI coding assistant powered by OpenAI
+- **Goose AI Agent**: Pre-installed and configured [Goose AI Coding agent](https://github.com/block/goose)
+- **Shared Terminal Session**: The same Goose session is visible in all browser windows
 - **Material Design**: Dark theme with Material icons for a beautiful coding experience
 - **Secure Environment**: Password-protected VS Code Server instance
 - **Git Integration**: Git pre-installed and ready for repository operations
-- **Persistent Configuration**: Environment variables and configuration preserved between sessions
+- **Persistent Configuration**: Environment variables and configuration preserved between sessions (Unless workspace is deleted)
 
 ## Quick Start
 
 1. **Clone this repository**
    ```bash
-   git clone https://github.com/yourusername/goose-vscode-agent.git
-   cd goose-vscode-agent
+   git clone https://github.com/PlatOps-AI/goosecode-server.git
+   cd goosecode-server
    ```
 
 2. **Create or edit `.env` file with your OpenAI API key**
@@ -42,7 +43,8 @@ A containerized VS Code server environment with integrated [Goose AI coding assi
 
 4. **Access Goosecode Server**
    - Open your browser and navigate to: http://localhost:8080
-   - Default password: `vscode-password` (can be changed in .env)
+   - Default password: `talktomegoose` (can be changed in .env)
+   - A shared terminal with Goose will start automatically
 
 <div align="center">
   <img src="./static/img/screenshot.png" alt="VS Code Server Screenshot" width="600">
@@ -76,10 +78,11 @@ You can pass environment variables and configuration options directly to the scr
 | `--image=VALUE` | Custom Docker image name | goosecode-server |
 | `--container=VALUE` | Custom container name | goosecode-server |
 | `--openai-key=VALUE` | OpenAI API key | From .env |
-| `--password=VALUE` | VS Code Server password | From .env or "vscode-password" |
+| `--password=VALUE` | VS Code Server password | From .env or "talktomegoose" |
 | `--github-token=VALUE` | GitHub token | From .env |
 | `--git-user=VALUE` | Git user name | From .env or "PlatOps AI" |
 | `--git-email=VALUE` | Git user email | From .env or "hello@platops.ai" |
+| `--no-terminal-sharing` | Disable shared terminal feature | Sharing enabled by default |
 
 ### Environment Variables Priority
 
@@ -89,17 +92,28 @@ You can pass environment variables and configuration options directly to the scr
 
 ## Using Goose AI Assistant
 
-Goose is a terminal-based AI coding agent that helps you write code, answer questions, and solve problems.
+Goosecode Server automatically starts a shared Goose AI terminal session when you launch the container. This means:
 
-### Starting a Goose Session
+- The same Goose session is visible in all browser windows
+- Multiple users can see and interact with the same conversation
+- The session persists even when browser windows are closed
 
-1. Open a terminal in VS Code
-2. Enter the command:
+### Accessing the Shared Goose Session
+
+When you open VS Code in your browser:
+
+1. A terminal with Goose AI should open automatically
+2. If not, open a terminal in VS Code and run one of these commands:
    ```bash
-   goose session
+   # Full interactive mode (default)
+   ~/shared-goose.sh
+   
+   # View-only mode (can't type, just watch)
+   ~/goose-view.sh
    ```
 
-3. Start interacting with Goose by typing your questions or instructions
+3. Each new terminal creates a unique session linked to the shared content
+4. Start interacting with Goose by typing your questions or instructions
 
 ### Goose Configuration
 
@@ -181,7 +195,9 @@ docker run -d -p 8888:8080 -e PASSWORD="your-secure-password" --name goosecode-s
 | Goose not found | Ensure the installation was successful with `which goose` |
 | Configuration errors | Run `goose configure` to set up the agent manually |
 | API key issues | Verify your OpenAI API key is correctly set in the `.env` file or passed via command line |
-| Session errors | Check if your model is supported by running `goose model list` |
+| Shared session not working | Run `~/shared-goose.sh` to connect to the shared session |
+| Scrolling affecting other clients | Each window should have its own session; check the status bar for your session name |
+| Need view-only access | Run `~/goose-view.sh` for read-only mode |
 
 ### Container Issues
 

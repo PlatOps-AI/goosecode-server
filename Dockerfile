@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     libdbus-1-3 \
     sudo \
     expect \
+    tmux \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

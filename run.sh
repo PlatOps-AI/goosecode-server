@@ -6,6 +6,7 @@ IMAGE_NAME="goosecode-server"
 CONTAINER_NAME="goosecode-server"
 HOST_PORT=8080
 CONTAINER_PORT=8080
+ENABLE_TERMINAL_SHARING=true
 
 # Parse command line arguments
 for arg in "$@"; do
@@ -36,6 +37,9 @@ for arg in "$@"; do
       ;;
     --git-email=*)
       GIT_USER_EMAIL="${arg#*=}"
+      ;;
+    --no-terminal-sharing)
+      ENABLE_TERMINAL_SHARING=false
       ;;
     *)
       # unknown option
@@ -91,12 +95,75 @@ docker run -d \
   -v "$(pwd)/workspace:/workspace" \
   -v "$(pwd)/static:/workspace/static" \
   -e OPENAI_API_KEY="${OPENAI_API_KEY:-}" \
-  -e PASSWORD="${PASSWORD:-vscode-password}" \
+  -e PASSWORD="${PASSWORD:-talktomegoose}" \
   -e GITHUB_TOKEN="${GITHUB_TOKEN:-}" \
   -e GIT_USER_NAME="${GIT_USER_NAME:-PlatOps AI}" \
   -e GIT_USER_EMAIL="${GIT_USER_EMAIL:-hello@platops.ai}" \
+  -e ENABLE_TERMINAL_SHARING="${ENABLE_TERMINAL_SHARING}" \
   $IMAGE_NAME
 
-echo "Goosecode Server is running!"
-echo "Access it at: http://localhost:$HOST_PORT"
-echo "Default password: ${PASSWORD:-vscode-password}" 
+# Function to create a divider line
+print_divider() {
+  printf "\033[34m%s\033[0m\n" "+---------------------------------------------------------------------------+"
+}
+
+# Print header box
+print_header() {
+  local text="$1"
+  local text_length=${#text}
+  local padding=$(( (73 - text_length) / 2 ))
+  local pad_str=$(printf "%${padding}s" "")
+  
+  printf "\033[34m| %s%s%s |\033[0m\n" "$pad_str" "$text" "$pad_str"
+}
+
+# Clear the terminal before showing output
+clear
+
+# Print retro-style divider line
+print_divider() {
+  printf "\033[34m%s\033[0m\n" "+---------------------------------------------------------------------------+"
+}
+
+# Print header box
+print_header() {
+  local text="$1"
+  local text_length=${#text}
+  local padding=$(( (73 - text_length) / 2 ))
+  local pad_str=$(printf "%${padding}s" "")
+  
+  printf "\033[34m| %s%s%s |\033[0m\n" "$pad_str" "$text" "$pad_str"
+}
+
+# Print banner with IBM/Windows style
+echo -e "\033[1;34m"
+cat << "EOF"
+┌─────────────────────────────────────────────────────────────────────────┐
+│                                                                         │
+│                          GOOSECODE SERVER v1.0                          │
+│                             >< HONK! ><                                 │
+│                                                                         │
+│                      Copyright (c) 2025 PlatOps AI                      │
+│                     Licensed under Apache License 2.0                   │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+EOF
+echo -e "\033[0m"
+
+print_divider
+printf "\033[34m| %-73s |\033[0m\n" "                         SYSTEM INFORMATION"
+print_divider
+
+printf "\033[34m| %-73s |\033[0m\n" " STATUS: Server is running successfully."
+printf "\033[34m| %-73s |\033[0m\n" " URL:    http://localhost:$HOST_PORT"
+printf "\033[34m| %-73s |\033[0m\n" " ACCESS: ${PASSWORD:-talktomegoose}"
+print_divider
+
+printf "\033[34m| %-73s |\033[0m\n" "                         SYSTEM COMMANDS"
+print_divider
+printf "\033[34m| %-73s |\033[0m\n" " STOP SERVER:  docker stop $CONTAINER_NAME"
+printf "\033[34m| %-73s |\033[0m\n" " VIEW LOGS:    docker logs $CONTAINER_NAME"
+print_divider
+
+printf "\033[1;34m| %-73s |\033[0m\n" "                 SERVER INITIALIZATION COMPLETE"
+print_divider
