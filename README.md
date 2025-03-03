@@ -1,6 +1,6 @@
 # Goosecode Server
 
-A containerized VS Code server environment with integrated Goose AI coding assistant. This project provides a ready-to-use Docker setup that combines VS Code Server with the Goose AI agent, allowing you to access a powerful coding environment through your browser.
+A containerized VS Code server environment with integrated [Goose AI coding assistant](https://github.com/block/goose). This project provides a ready-to-use Docker setup that combines VS Code Server with the Goose AI agent, allowing you to access a powerful coding environment through your browser.
 
 <div align="center">
   <img src="./static/img/logo.png" alt="Goose AI + VS Code Server" width="400">

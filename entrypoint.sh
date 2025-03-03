@@ -61,7 +61,6 @@ Welcome to your VS Code Server workspace with Goose AI assistant integration.
    \`\`\`
 3. **Begin collaborating** with Goose by typing your questions or instructions
 
-
 ## Troubleshooting
 
 If you encounter any issues:
@@ -81,7 +80,7 @@ If you encounter any issues:
 
 ---
 
-Documentation: [Goose AI Documentation](https://goose.ai/docs)
+Documentation: [Goose AI Documentation](https://block.github.io/goose/docs/category/getting-started)
 EOF
 fi
 

@@ -56,17 +56,25 @@ else
   echo "Warning: .env file not found. Using environment variables from command line or defaults."
 fi
 
-# Build Docker image if it doesn't exist or if --rebuild flag is provided
-if [ "$REBUILD" = true ] || ! docker image inspect $IMAGE_NAME >/dev/null 2>&1; then
-  echo "Building Docker image..."
-  docker build -t $IMAGE_NAME .
-fi
-
 # Stop and remove existing container if it exists
 if docker ps -a | grep -q $CONTAINER_NAME; then
   echo "Stopping and removing existing container..."
   docker stop $CONTAINER_NAME >/dev/null 2>&1 || true
   docker rm $CONTAINER_NAME >/dev/null 2>&1 || true
+fi
+
+# Build Docker image if it doesn't exist or if --rebuild flag is provided
+if [ "$REBUILD" = true ] || ! docker image inspect $IMAGE_NAME >/dev/null 2>&1; then
+  echo "Building Docker image..."
+  
+  # If this is a forced rebuild, delete the workspace directory for a clean start
+  if [ "$REBUILD" = true ] && [ -d "$(pwd)/workspace" ]; then
+    echo "Rebuild flag detected. Removing existing workspace directory for clean installation..."
+    rm -rf "$(pwd)/workspace"
+    echo "Workspace directory removed."
+  fi
+  
+  docker build -t $IMAGE_NAME .
 fi
 
 # Create workspace directory if it doesn't exist
