@@ -245,6 +245,24 @@ if [ "$ENABLE_TERMINAL_SHARING" = "true" ]; then
   echo "For additional terminals, use regular bash (independent) or manually run ~/shared-goose.sh to connect to shared session."
 fi
 
+# Start the Goose API if enabled
+if [ "$ENABLE_GOOSE_API" = "true" ]; then
+  if [ -d "/workspace/goose-api" ] && [ -f "/workspace/goose-api/main.py" ]; then
+    echo "Starting Goose Terminal API..."
+    
+    # Use the Python virtual environment
+    export PATH="/opt/goose-api-venv/bin:$PATH"
+    
+    # Start the API server
+    cd /workspace/goose-api
+    nohup python3 main.py > /tmp/goose-api.log 2>&1 &
+    echo "Goose API started on port 8000. Swagger docs available at http://localhost:8000/docs"
+    cd /workspace
+  else
+    echo "Goose API directory not found or missing main.py. API will not start."
+  fi
+fi
+
 # Start VS Code Server
 echo "Starting code-server..."
 exec code-server --config $HOME/.config/code-server/config.yaml /workspace 

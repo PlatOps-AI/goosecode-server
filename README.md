@@ -16,6 +16,7 @@ A containerized VS Code server environment with integrated [Goose AI coding agen
 - **Browser-Based Development**: Access VS Code directly from your browser
 - **Goose AI Agent**: Pre-installed and configured [Goose AI Coding agent](https://github.com/block/goose)
 - **Shared Terminal Session**: The same Goose session is visible in all browser windows
+- **Terminal REST API**: Programmatically send commands and access session logs via HTTP
 - **Material Design**: Dark theme with Material icons for a beautiful coding experience
 - **Secure Environment**: Password-protected VS Code Server instance
 - **Git Integration**: Git pre-installed and ready for repository operations
@@ -83,6 +84,8 @@ You can pass environment variables and configuration options directly to the scr
 | `--git-user=VALUE` | Git user name | From .env or "PlatOps AI" |
 | `--git-email=VALUE` | Git user email | From .env or "hello@platops.ai" |
 | `--no-terminal-sharing` | Disable shared terminal feature | Sharing enabled by default |
+| `--no-goose-api` | Disable the Goose Terminal API | API enabled by default |
+| `--api-port=VALUE` | Custom port for the Goose API | 8000 |
 
 ### Environment Variables Priority
 
@@ -160,7 +163,7 @@ docker build -t goosecode-server .
 
 ### Running the Container Manually
 ```bash
-docker run -d -p 8080:8080 --name goosecode-server --env-file .env goosecode-server
+docker run -d -p 8080:8080 -p 8000:8000 --name goosecode-server --env-file .env goosecode-server
 ```
 
 ### Managing the Container
@@ -186,6 +189,96 @@ docker exec -it goosecode-server bash
 docker run -d -p 8888:8080 -e PASSWORD="your-secure-password" --name goosecode-server --env-file .env goosecode-server
 ```
 
+## Goose Terminal API
+
+Goosecode Server includes a REST API for interacting with the Goose terminal sessions and accessing session logs. This API enables programmatic access to terminal commands and conversation history.
+
+### API Features
+
+- Send commands to shared tmux terminal sessions
+- List active tmux sessions and their status
+- Access Goose conversation history logs
+- Retrieve session information and metadata
+- Query for the most recent session ID
+
+### API Configuration
+
+The Terminal API is enabled by default when you start the container:
+
+```bash
+# API runs on port 8000 by default
+# Access Swagger docs at http://localhost:8000/docs
+```
+
+#### API Command-line Options
+
+```bash
+# Disable the API completely
+./run.sh --no-goose-api
+
+# Change the API port (default is 8000)
+./run.sh --api-port=9000
+```
+
+### API Endpoints
+
+#### Terminal Interaction
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/terminal/send` | POST | Send a command to the tmux terminal |
+| `/api/terminal/sessions` | GET | List all tmux sessions |
+
+#### Session Logs
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/sessions` | GET | List all session log files |
+| `/api/sessions/{session_id}` | GET | Get contents of a specific session log |
+| `/api/sessions/latest/id` | GET | Get the most recent session ID |
+
+### API Usage Examples
+
+#### Send a Command to the Terminal
+
+```python
+import requests
+
+response = requests.post("http://localhost:8000/api/terminal/send", json={
+    "command": "echo 'Hello from API'",
+    "session": "goose-controller",  # Optional, this is the default
+    "window": "goose"               # Optional, this is the default
+})
+print(response.json())
+```
+
+#### Access Session Logs
+
+```python
+import requests
+
+# Get the most recent session ID
+response = requests.get("http://localhost:8000/api/sessions/latest/id")
+latest_session = response.json()["session_id"]
+
+# Get that session's conversation log
+response = requests.get(f"http://localhost:8000/api/sessions/{latest_session}")
+log_data = response.json()
+
+# Process the conversation entries
+for entry in log_data["entries"]:
+    if "role" in entry["data"]:
+        print(f"{entry['data']['role']}: {entry['data'].get('content', '')[:100]}...")
+```
+
+### API Logging
+
+To check the API logs:
+
+```bash
+docker exec goosecode-server cat /tmp/goose-api.log
+```
+
 ## Troubleshooting
 
 ### Goose AI Issues
@@ -207,7 +300,8 @@ docker run -d -p 8888:8080 -e PASSWORD="your-secure-password" --name goosecode-s
 | Permission issues | Container uses the `coder` user; use `sudo` for privileged operations |
 | Performance issues | Adjust Docker resource allocation in Docker Desktop settings |
 | Environment variables not working | Check priority order: command line > .env file > defaults |
+| API not accessible | Ensure port 8000 is published with `-p 8000:8000` and the API is enabled |
 
 ---
 
-Built with ❤️ for developers 
+Built with ❤️ for developers

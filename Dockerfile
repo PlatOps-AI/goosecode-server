@@ -15,8 +15,19 @@ RUN apt-get update && apt-get install -y \
     sudo \
     expect \
     tmux \
+    python3 \
+    python3-pip \
+    python3-venv \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Copy goose-api requirements.txt for dependency installation
+COPY ./goose-api/requirements.txt /tmp/requirements.txt
+
+# Set up a Python virtual environment for the Goose API
+RUN python3 -m venv /opt/goose-api-venv
+ENV PATH="/opt/goose-api-venv/bin:$PATH"
+RUN pip3 install --upgrade pip && pip3 install -r /tmp/requirements.txt
 
 # Install Goose AI agent (simple one-step process)
 RUN curl -fsSL https://github.com/block/goose/releases/download/stable/download_cli.sh | bash \
@@ -39,6 +50,11 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 # Copy static resources
 COPY ./static /workspace/static
 RUN chmod -R 755 /workspace/static
+
+# Copy goose-api directory
+COPY ./goose-api /workspace/goose-api
+RUN chmod +x /workspace/goose-api/docker-integration.sh
+RUN chmod -R +x /workspace/goose-api/examples/
 
 # Create configuration directories
 RUN mkdir -p /home/coder/.local/share/code-server/User/

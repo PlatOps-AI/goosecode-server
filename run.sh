@@ -7,6 +7,8 @@ CONTAINER_NAME="goosecode-server"
 HOST_PORT=8080
 CONTAINER_PORT=8080
 ENABLE_TERMINAL_SHARING=true
+ENABLE_GOOSE_API=true
+API_PORT=8000
 
 # Parse command line arguments
 for arg in "$@"; do
@@ -40,6 +42,12 @@ for arg in "$@"; do
       ;;
     --no-terminal-sharing)
       ENABLE_TERMINAL_SHARING=false
+      ;;
+    --no-goose-api)
+      ENABLE_GOOSE_API=false
+      ;;
+    --api-port=*)
+      API_PORT="${arg#*=}"
       ;;
     *)
       # unknown option
@@ -87,20 +95,50 @@ if [ ! -d "$(pwd)/workspace" ]; then
   echo "Created workspace directory."
 fi
 
+# Check if goose-api directory exists
+GOOSE_API_DIR="$(pwd)/goose-api"
+ENABLE_API_MOUNT=false
+if [ "$ENABLE_GOOSE_API" = "true" ] && [ -d "$GOOSE_API_DIR" ]; then
+  ENABLE_API_MOUNT=true
+  echo "Goose API directory found, will mount for container access"
+else
+  echo "Goose API directory not found or API disabled, skipping mount"
+fi
+
 # Start the container with environment variables
 echo "Starting Goosecode Server container..."
-docker run -d \
-  --name $CONTAINER_NAME \
-  -p $HOST_PORT:$CONTAINER_PORT \
-  -v "$(pwd)/workspace:/workspace" \
-  -v "$(pwd)/static:/workspace/static" \
-  -e OPENAI_API_KEY="${OPENAI_API_KEY:-}" \
-  -e PASSWORD="${PASSWORD:-talktomegoose}" \
-  -e GITHUB_TOKEN="${GITHUB_TOKEN:-}" \
-  -e GIT_USER_NAME="${GIT_USER_NAME:-PlatOps AI}" \
-  -e GIT_USER_EMAIL="${GIT_USER_EMAIL:-hello@platops.ai}" \
-  -e ENABLE_TERMINAL_SHARING="${ENABLE_TERMINAL_SHARING}" \
-  $IMAGE_NAME
+if [ "$ENABLE_API_MOUNT" = "true" ]; then
+  docker run -d \
+    --name $CONTAINER_NAME \
+    -p $HOST_PORT:$CONTAINER_PORT \
+    -p $API_PORT:8000 \
+    -v "$(pwd)/workspace:/workspace" \
+    -v "$(pwd)/static:/workspace/static" \
+    -v "$GOOSE_API_DIR:/workspace/goose-api" \
+    -e OPENAI_API_KEY="${OPENAI_API_KEY:-}" \
+    -e PASSWORD="${PASSWORD:-talktomegoose}" \
+    -e GITHUB_TOKEN="${GITHUB_TOKEN:-}" \
+    -e GIT_USER_NAME="${GIT_USER_NAME:-PlatOps AI}" \
+    -e GIT_USER_EMAIL="${GIT_USER_EMAIL:-hello@platops.ai}" \
+    -e ENABLE_TERMINAL_SHARING="${ENABLE_TERMINAL_SHARING}" \
+    -e ENABLE_GOOSE_API="${ENABLE_GOOSE_API}" \
+    $IMAGE_NAME
+else
+  docker run -d \
+    --name $CONTAINER_NAME \
+    -p $HOST_PORT:$CONTAINER_PORT \
+    -p $API_PORT:8000 \
+    -v "$(pwd)/workspace:/workspace" \
+    -v "$(pwd)/static:/workspace/static" \
+    -e OPENAI_API_KEY="${OPENAI_API_KEY:-}" \
+    -e PASSWORD="${PASSWORD:-talktomegoose}" \
+    -e GITHUB_TOKEN="${GITHUB_TOKEN:-}" \
+    -e GIT_USER_NAME="${GIT_USER_NAME:-PlatOps AI}" \
+    -e GIT_USER_EMAIL="${GIT_USER_EMAIL:-hello@platops.ai}" \
+    -e ENABLE_TERMINAL_SHARING="${ENABLE_TERMINAL_SHARING}" \
+    -e ENABLE_GOOSE_API="${ENABLE_GOOSE_API}" \
+    $IMAGE_NAME
+fi
 
 # Function to create a divider line
 print_divider() {
@@ -157,12 +195,18 @@ print_divider
 printf "\033[34m| %-73s |\033[0m\n" " STATUS: Server is running successfully."
 printf "\033[34m| %-73s |\033[0m\n" " URL:    http://localhost:$HOST_PORT"
 printf "\033[34m| %-73s |\033[0m\n" " ACCESS: ${PASSWORD:-talktomegoose}"
+
+if [ "$ENABLE_GOOSE_API" = "true" ]; then
+  printf "\033[34m| %-73s |\033[0m\n" " API:     http://localhost:$API_PORT/docs (Swagger UI)"
+fi
+
 print_divider
 
 printf "\033[34m| %-73s |\033[0m\n" "                         SYSTEM COMMANDS"
 print_divider
 printf "\033[34m| %-73s |\033[0m\n" " STOP SERVER:  docker stop $CONTAINER_NAME"
 printf "\033[34m| %-73s |\033[0m\n" " VIEW LOGS:    docker logs $CONTAINER_NAME"
+printf "\033[34m| %-73s |\033[0m\n" " API LOGS:     docker exec $CONTAINER_NAME cat /tmp/goose-api.log"
 print_divider
 
 printf "\033[1;34m| %-73s |\033[0m\n" "                 SERVER INITIALIZATION COMPLETE"
