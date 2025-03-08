@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Dead simple Goose AI conversation client.
 
@@ -14,6 +15,30 @@ Usage:
     
     # Monitor a session
     python streaming.py --session-id 20250308_123456 --monitor
+
+SSE Event Structure:
+    The server sends events with the following types:
+    
+    - command_sent: Confirms a command was sent to the terminal
+      Data: {"command": "string"}
+    
+    - session_identified: Provides the session ID for the conversation
+      Data: {"session_id": "string"}
+    
+    - initial_state: Contains the complete conversation history
+      Data: {"entries": [{...}, {...}]}
+    
+    - update: Contains a new message in the conversation
+      Data: {"entry": {...}}
+    
+    - conversation_complete: Sent when the assistant has finished responding
+      Data: {"session_id": "string", "message": "string"}
+    
+    - ping: Periodic keepalive message
+      Data: {"timestamp": number}
+    
+    - error: Sent when an error occurs
+      Data: {"error": "string"}
 """
 import requests
 import sseclient
@@ -140,19 +165,32 @@ def stream_conversation(command=None, session_id=None, monitor_only=False):
             timestamp = datetime.now().strftime("%H:%M:%S")
             
             if event.event == "command_sent":
+                # This event confirms that the command was successfully sent to the terminal
+                # It provides confirmation that the API received and processed the request
                 data = json.loads(event.data)
                 print(f"[{timestamp}] ✓ Command sent: \"{data['command']}\"")
             
             elif event.event == "session_identified":
+                # This event provides the session ID for the conversation
+                # The session ID can be used to continue the conversation later
                 data = json.loads(event.data)
                 current_session_id = data["session_id"]
                 print(f"[{timestamp}] ✓ Session ID: {current_session_id}")
             
             elif event.event == "initial_state":
-                # We don't need to print the whole history for simplicity
-                pass
+                # This event contains the complete conversation history
+                # For monitoring, it provides the current state before updates
+                data = json.loads(event.data)
+                entries = data.get("entries", [])
+                print(f"[{timestamp}] ℹ️ Received conversation history ({len(entries)} entries)")
+                # We don't print the whole history for simplicity
+                # Uncomment to process history:
+                # for entry in entries:
+                #     # Process each entry
             
             elif event.event == "update":
+                # This event contains new messages in the conversation
+                # It's sent whenever there's a new user or assistant message
                 data = json.loads(event.data)
                 entry = data["entry"]
                 
@@ -195,12 +233,20 @@ def stream_conversation(command=None, session_id=None, monitor_only=False):
                             print(f"[{timestamp}] {role}: {item['Text']['text']}")
                 
             elif event.event == "conversation_complete":
+                # This event signals that the assistant has finished responding
+                # It's a good point to exit the streaming or prompt for the next user input
                 data = json.loads(event.data)
                 current_session_id = data["session_id"]
                 print(f"\n✓ Response complete. To continue: python streaming.py \"your message\" --session-id {current_session_id}")
                 return
             
+            elif event.event == "ping":
+                # Ping events are sent periodically to keep the connection alive
+                # No need to display these, but we could log them for debugging
+                pass
+            
             elif event.event == "error":
+                # Error events indicate problems with the streaming connection or request
                 data = json.loads(event.data)
                 print(f"[{timestamp}] ⚠️ Error: {data.get('error', 'Unknown error')}")
             
