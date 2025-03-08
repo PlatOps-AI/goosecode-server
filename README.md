@@ -16,7 +16,8 @@ A containerized VS Code server environment with integrated [Goose AI coding agen
 - **Browser-Based Development**: Access VS Code directly from your browser
 - **Goose AI Agent**: Pre-installed and configured [Goose AI Coding agent](https://github.com/block/goose)
 - **Shared Terminal Session**: The same Goose session is visible in all browser windows
-- **Terminal REST API**: Programmatically send commands and access session logs via HTTP
+- **Goose Terminal API**: REST API for sending commands to the terminal and retrieving session logs
+- **Streaming Conversations**: Real-time streaming of Goose AI conversations using Server-Sent Events (SSE)
 - **Material Design**: Dark theme with Material icons for a beautiful coding experience
 - **Secure Environment**: Password-protected VS Code Server instance
 - **Git Integration**: Git pre-installed and ready for repository operations
@@ -191,93 +192,31 @@ docker run -d -p 8888:8080 -e PASSWORD="your-secure-password" --name goosecode-s
 
 ## Goose Terminal API
 
-Goosecode Server includes a REST API for interacting with the Goose terminal sessions and accessing session logs. This API enables programmatic access to terminal commands and conversation history.
+The Goosecode Server includes an HTTP API for interacting with the terminal and accessing Goose conversation logs.
 
-### API Features
+### API Features:
 
-- Send commands to shared tmux terminal sessions
-- List active tmux sessions and their status
-- Access Goose conversation history logs
-- Retrieve session information and metadata
-- Query for the most recent session ID
+- Send commands to the tmux terminal
+- List active tmux sessions
+- Retrieve Goose conversation logs
+- Stream conversation updates in real-time using Server-Sent Events
 
-### API Configuration
+The API is enabled by default when starting the container and runs on port 8000.
 
-The Terminal API is enabled by default when you start the container:
+- Swagger documentation: http://localhost:8000/docs
+- API base URL: http://localhost:8000/api/
 
-```bash
-# API runs on port 8000 by default
-# Access Swagger docs at http://localhost:8000/docs
-```
-
-#### API Command-line Options
+### Command-line options:
 
 ```bash
-# Disable the API completely
+# Disable the Goose API
 ./run.sh --no-goose-api
 
-# Change the API port (default is 8000)
+# Change the API port
 ./run.sh --api-port=9000
 ```
 
-### API Endpoints
-
-#### Terminal Interaction
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/terminal/send` | POST | Send a command to the tmux terminal |
-| `/api/terminal/sessions` | GET | List all tmux sessions |
-
-#### Session Logs
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/sessions` | GET | List all session log files |
-| `/api/sessions/{session_id}` | GET | Get contents of a specific session log |
-| `/api/sessions/latest/id` | GET | Get the most recent session ID |
-
-### API Usage Examples
-
-#### Send a Command to the Terminal
-
-```python
-import requests
-
-response = requests.post("http://localhost:8000/api/terminal/send", json={
-    "command": "echo 'Hello from API'",
-    "session": "goose-controller",  # Optional, this is the default
-    "window": "goose"               # Optional, this is the default
-})
-print(response.json())
-```
-
-#### Access Session Logs
-
-```python
-import requests
-
-# Get the most recent session ID
-response = requests.get("http://localhost:8000/api/sessions/latest/id")
-latest_session = response.json()["session_id"]
-
-# Get that session's conversation log
-response = requests.get(f"http://localhost:8000/api/sessions/{latest_session}")
-log_data = response.json()
-
-# Process the conversation entries
-for entry in log_data["entries"]:
-    if "role" in entry["data"]:
-        print(f"{entry['data']['role']}: {entry['data'].get('content', '')[:100]}...")
-```
-
-### API Logging
-
-To check the API logs:
-
-```bash
-docker exec goosecode-server cat /tmp/goose-api.log
-```
+For more details about the API, including examples and the streaming client, see the [Goose API README](goose-api/README.md).
 
 ## Troubleshooting
 
