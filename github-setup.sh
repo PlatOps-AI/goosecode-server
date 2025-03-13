@@ -47,8 +47,28 @@ if [ -n "$GITHUB_TOKEN" ]; then
     git config --global credential.helper 'cache --timeout=86400'
     
     echo "✓ Git configured with GitHub token successfully!"
+    
+    # Configure GitHub CLI (gh) with the token
     echo ""
-    echo "You can now clone private repositories without authentication:"
+    echo "Configuring GitHub CLI..."
+    
+    # Create gh config directory if it doesn't exist
+    mkdir -p ~/.config/gh
+    
+    # Create the hosts.yml file with authentication
+    cat > ~/.config/gh/hosts.yml << EOF
+github.com:
+    oauth_token: ${GITHUB_TOKEN}
+    user: ${GIT_USER_NAME}
+    git_protocol: https
+EOF
+    
+    echo "✓ GitHub CLI configured successfully!"
+    echo ""
+    echo "You can now use 'gh' commands, including creating PRs:"
+    echo "  gh pr create --title 'Title' --body 'Description'"
+    echo ""
+    echo "You can also clone private repositories without authentication:"
     echo "  git clone https://github.com/username/private-repo.git"
 else
     echo ""

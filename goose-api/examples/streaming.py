@@ -44,10 +44,12 @@ import requests
 import sseclient
 import json
 import sys
+import os
 import argparse
 from datetime import datetime
 
 API_BASE = "http://localhost:8000"
+API_KEY = os.environ.get("PASSWORD", "talktomegoose")
 
 def format_tool_request(content):
     """Format a tool request message for display."""
@@ -152,9 +154,14 @@ def stream_conversation(command=None, session_id=None, monitor_only=False):
         "tmux_window": "goose"
     }
     
+    # Include authentication header
+    headers = {
+        "X-API-Key": API_KEY
+    }
+    
     try:
         # Send request and start streaming
-        response = requests.post(f"{API_BASE}/api/stream", json=payload, stream=True)
+        response = requests.post(f"{API_BASE}/api/stream", json=payload, headers=headers, stream=True)
         response.raise_for_status()
         
         client = sseclient.SSEClient(response)

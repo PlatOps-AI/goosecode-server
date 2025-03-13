@@ -5,16 +5,22 @@ Example script to fetch and display a Goose session log via the API.
 import requests
 import sys
 import json
+import os
 from datetime import datetime
 
 API_BASE = "http://localhost:8000"
+API_KEY = os.environ.get("PASSWORD", "talktomegoose")
 
 def get_latest_session_id():
     """Get the ID of the most recent session."""
     url = f"{API_BASE}/api/sessions/latest/id"
     
+    headers = {
+        "X-API-Key": API_KEY
+    }
+    
     try:
-        response = requests.get(url)
+        response = requests.get(url, headers=headers)
         response.raise_for_status()
         return response.json()["session_id"]
     except requests.exceptions.RequestException as e:
@@ -28,8 +34,12 @@ def get_session_logs(session_id, format="json"):
     if format != "json":
         url += f"?format={format}"
     
+    headers = {
+        "X-API-Key": API_KEY
+    }
+    
     try:
-        response = requests.get(url)
+        response = requests.get(url, headers=headers)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
@@ -40,8 +50,12 @@ def list_available_sessions():
     """List all available session logs."""
     url = f"{API_BASE}/api/sessions"
     
+    headers = {
+        "X-API-Key": API_KEY
+    }
+    
     try:
-        response = requests.get(url)
+        response = requests.get(url, headers=headers)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:

@@ -108,8 +108,19 @@ if ! tmux has-session -t "\$CONTROLLER_SESSION" 2>/dev/null; then
     # Create the controller session with a window named "goose"
     tmux new-session -d -s "\$CONTROLLER_SESSION" -n "\$WINDOW_NAME"
     
-    # Start Goose directly without the intro messages
-    tmux send-keys -t "\$CONTROLLER_SESSION:\$WINDOW_NAME" "clear && goose session" C-m
+    # Check if GOOSE_SESSION_ID environment variable is set
+    if [ -n "\$GOOSE_SESSION_ID" ]; then
+        if [ -n "\$GOOSE_RESUME_SESSION" ] && [ "\$GOOSE_RESUME_SESSION" = "true" ]; then
+            echo "Resuming goose session with ID: \$GOOSE_SESSION_ID"
+            tmux send-keys -t "\$CONTROLLER_SESSION:\$WINDOW_NAME" "clear && goose session --resume --name \"\$GOOSE_SESSION_ID\"" C-m
+        else
+            echo "Starting goose session with ID: \$GOOSE_SESSION_ID"
+            tmux send-keys -t "\$CONTROLLER_SESSION:\$WINDOW_NAME" "clear && goose session --name \"\$GOOSE_SESSION_ID\"" C-m
+        fi
+    else
+        # Start Goose directly without the intro messages
+        tmux send-keys -t "\$CONTROLLER_SESSION:\$WINDOW_NAME" "clear && goose session" C-m
+    fi
 fi
 
 # Create a new client session linked to the controller session's window
@@ -178,6 +189,17 @@ Welcome to your VS Code Server workspace with Goose AI assistant integration.
 This workspace automatically starts a shared terminal with Goose AI running.
 All browser windows connected to this server will see the same terminal session.
 
+### Terminal Modes
+
+The Goose terminal can operate in two modes:
+- **Read-Write Mode**: Full access to type commands and interact with Goose (default)
+- **Read-Only Mode**: Observer mode where you can only view the terminal output
+
+The current default mode is set to: **${DEFAULT_TERMINAL_MODE}**
+
+You can switch between modes at any time:
+- For read-write access: Use the "shared-goose" terminal profile or run \`~/shared-goose.sh\`
+- For read-only access: Use the "goose-view" terminal profile or run \`~/goose-view.sh\`
 
 ## Troubleshooting
 
@@ -198,10 +220,17 @@ fi
 
 # Create a workspace configuration file
 mkdir -p /workspace/.vscode
+
+# Set default terminal profile based on DEFAULT_TERMINAL_MODE
+DEFAULT_PROFILE="shared-goose"
+if [ "$DEFAULT_TERMINAL_MODE" = "read-only" ]; then
+  DEFAULT_PROFILE="goose-view"
+fi
+
 cat > /workspace/.vscode/settings.json << EOF
 {
     "workbench.startupEditor": "none",
-    "terminal.integrated.defaultProfile.linux": "shared-goose",
+    "terminal.integrated.defaultProfile.linux": "${DEFAULT_PROFILE}",
     "terminal.integrated.profiles.linux": {
         "shared-goose": {
             "path": "bash",
@@ -239,10 +268,31 @@ if [ "$ENABLE_TERMINAL_SHARING" = "true" ]; then
   # but don't connect to it yet - VS Code will do that with the default terminal
   tmux has-session -t "$CONTROLLER_SESSION" 2>/dev/null || {
     tmux new-session -d -s "$CONTROLLER_SESSION" -n "$WINDOW_NAME"
-    tmux send-keys -t "$CONTROLLER_SESSION:$WINDOW_NAME" "clear && goose session" C-m
+    
+    # Check if GOOSE_SESSION_ID environment variable is set
+    if [ -n "$GOOSE_SESSION_ID" ]; then
+      if [ -n "$GOOSE_RESUME_SESSION" ] && [ "$GOOSE_RESUME_SESSION" = "true" ]; then
+        echo "Resuming goose session with ID: $GOOSE_SESSION_ID"
+        tmux send-keys -t "$CONTROLLER_SESSION:$WINDOW_NAME" "clear && goose session --resume --name \"$GOOSE_SESSION_ID\"" C-m
+      else
+        echo "Starting goose session with ID: $GOOSE_SESSION_ID"
+        tmux send-keys -t "$CONTROLLER_SESSION:$WINDOW_NAME" "clear && goose session --name \"$GOOSE_SESSION_ID\"" C-m
+      fi
+    else
+      # Start a regular session without a specific ID
+      tmux send-keys -t "$CONTROLLER_SESSION:$WINDOW_NAME" "clear && goose session" C-m
+    fi
   }
+  
+  if [ "$DEFAULT_TERMINAL_MODE" = "read-only" ]; then
+    echo "Default terminal mode is set to READ-ONLY."
+  else
+    echo "Default terminal mode is set to READ-WRITE."
+  fi
+  
   echo "Shared Goose controller session ready. VS Code will open it automatically."
   echo "For additional terminals, use regular bash (independent) or manually run ~/shared-goose.sh to connect to shared session."
+  echo "For read-only access, use ~/goose-view.sh to connect without typing ability."
 fi
 
 # Start the Goose API if enabled
