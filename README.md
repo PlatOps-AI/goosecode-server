@@ -87,6 +87,8 @@ You can pass environment variables and configuration options directly to the scr
 | `--no-terminal-sharing` | Disable shared terminal feature | Sharing enabled by default |
 | `--no-goose-api` | Disable the Goose Terminal API | API enabled by default |
 | `--api-port=VALUE` | Custom port for the Goose API | 8000 |
+| `--goose-session=VALUE` | Specify a Goose session ID | Random session ID |
+| `--resume-session` | Resume an existing Goose session | Start new session |
 
 ### Environment Variables Priority
 
@@ -118,6 +120,31 @@ When you open VS Code in your browser:
 
 3. Each new terminal creates a unique session linked to the shared content
 4. Start interacting with Goose by typing your questions or instructions
+
+### Using Environment Variables for Session IDs
+
+You can specify a custom session ID using environment variables:
+
+1. Set the `GOOSE_SESSION_ID` environment variable in your `.env` file or via the `--goose-session` flag:
+   ```bash
+   # In .env file
+   GOOSE_SESSION_ID=my-project-session
+   
+   # Or when running the container
+   ./run.sh --goose-session=my-project-session
+   ```
+
+2. To resume an existing session, set the `GOOSE_RESUME_SESSION` environment variable:
+   ```bash
+   # In .env file
+   GOOSE_SESSION_ID=my-project-session
+   GOOSE_RESUME_SESSION=true
+   
+   # Or when running the container
+   ./run.sh --goose-session=my-project-session --resume-session
+   ```
+
+These variables allow you to maintain consistent session IDs across container restarts or share specific sessions with team members.
 
 ### Goose Configuration
 

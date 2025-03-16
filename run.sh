@@ -9,6 +9,7 @@ CONTAINER_PORT=8080
 ENABLE_TERMINAL_SHARING=true
 ENABLE_GOOSE_API=true
 API_PORT=8000
+DEFAULT_TERMINAL_MODE="read-write"  # Can be "read-write" or "read-only"
 
 # Parse command line arguments
 for arg in "$@"; do
@@ -49,6 +50,15 @@ for arg in "$@"; do
     --api-port=*)
       API_PORT="${arg#*=}"
       ;;
+    --terminal-mode=*)
+      DEFAULT_TERMINAL_MODE="${arg#*=}"
+      ;;
+    --goose-session=*)
+      GOOSE_SESSION_ID="${arg#*=}"
+      ;;
+    --resume-session)
+      GOOSE_RESUME_SESSION=true
+      ;;
     *)
       # unknown option
       ;;
@@ -64,6 +74,33 @@ if [ -f .env ]; then
   
   # Command line arguments take precedence over .env variables
   # No need to reassign variables that were already set from command line
+  if [ -z "$OPENAI_API_KEY" ] && [ -n "${OPENAI_API_KEY_ENV:-}" ]; then
+    OPENAI_API_KEY="$OPENAI_API_KEY_ENV"
+  fi
+  
+  if [ -z "$PASSWORD" ] && [ -n "${PASSWORD_ENV:-}" ]; then
+    PASSWORD="$PASSWORD_ENV"
+  fi
+  
+  if [ -z "$GITHUB_TOKEN" ] && [ -n "${GITHUB_TOKEN_ENV:-}" ]; then
+    GITHUB_TOKEN="$GITHUB_TOKEN_ENV"
+  fi
+  
+  if [ -z "$GIT_USER_NAME" ] && [ -n "${GIT_USER_NAME_ENV:-}" ]; then
+    GIT_USER_NAME="$GIT_USER_NAME_ENV"
+  fi
+  
+  if [ -z "$GIT_USER_EMAIL" ] && [ -n "${GIT_USER_EMAIL_ENV:-}" ]; then
+    GIT_USER_EMAIL="$GIT_USER_EMAIL_ENV"
+  fi
+  
+  if [ -z "$GOOSE_SESSION_ID" ] && [ -n "${GOOSE_SESSION_ID_ENV:-}" ]; then
+    GOOSE_SESSION_ID="$GOOSE_SESSION_ID_ENV"
+  fi
+  
+  if [ -z "$GOOSE_RESUME_SESSION" ] && [ -n "${GOOSE_RESUME_SESSION_ENV:-}" ]; then
+    GOOSE_RESUME_SESSION="$GOOSE_RESUME_SESSION_ENV"
+  fi
 else
   echo "Warning: .env file not found. Using environment variables from command line or defaults."
 fi
@@ -122,6 +159,9 @@ if [ "$ENABLE_API_MOUNT" = "true" ]; then
     -e GIT_USER_EMAIL="${GIT_USER_EMAIL:-hello@platops.ai}" \
     -e ENABLE_TERMINAL_SHARING="${ENABLE_TERMINAL_SHARING}" \
     -e ENABLE_GOOSE_API="${ENABLE_GOOSE_API}" \
+    -e DEFAULT_TERMINAL_MODE="${DEFAULT_TERMINAL_MODE}" \
+    -e GOOSE_SESSION_ID="${GOOSE_SESSION_ID:-}" \
+    -e GOOSE_RESUME_SESSION="${GOOSE_RESUME_SESSION:-false}" \
     $IMAGE_NAME
 else
   docker run -d \
@@ -137,6 +177,9 @@ else
     -e GIT_USER_EMAIL="${GIT_USER_EMAIL:-hello@platops.ai}" \
     -e ENABLE_TERMINAL_SHARING="${ENABLE_TERMINAL_SHARING}" \
     -e ENABLE_GOOSE_API="${ENABLE_GOOSE_API}" \
+    -e DEFAULT_TERMINAL_MODE="${DEFAULT_TERMINAL_MODE}" \
+    -e GOOSE_SESSION_ID="${GOOSE_SESSION_ID:-}" \
+    -e GOOSE_RESUME_SESSION="${GOOSE_RESUME_SESSION:-false}" \
     $IMAGE_NAME
 fi
 
@@ -198,6 +241,10 @@ printf "\033[34m| %-73s |\033[0m\n" " ACCESS: ${PASSWORD:-talktomegoose}"
 
 if [ "$ENABLE_GOOSE_API" = "true" ]; then
   printf "\033[34m| %-73s |\033[0m\n" " API:     http://localhost:$API_PORT/docs (Swagger UI)"
+fi
+
+if [ "$ENABLE_TERMINAL_SHARING" = "true" ]; then
+  printf "\033[34m| %-73s |\033[0m\n" " TERMINAL: ${DEFAULT_TERMINAL_MODE} mode (configured via --terminal-mode)"
 fi
 
 print_divider

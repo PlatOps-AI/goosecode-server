@@ -5,8 +5,10 @@ Example script to send a command to the shared tmux terminal via the Goose API.
 import requests
 import sys
 import json
+import os
 
 API_BASE = "http://localhost:8000"
+API_KEY = os.environ.get("PASSWORD", "talktomegoose")
 
 def send_command(cmd, session="goose-controller", window="goose"):
     """Send a command to the specified tmux session."""
@@ -18,8 +20,12 @@ def send_command(cmd, session="goose-controller", window="goose"):
         "window": window
     }
     
+    headers = {
+        "X-API-Key": API_KEY
+    }
+    
     try:
-        response = requests.post(url, json=payload)
+        response = requests.post(url, json=payload, headers=headers)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:

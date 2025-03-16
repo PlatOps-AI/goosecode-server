@@ -4,16 +4,22 @@ Example script to list all available Goose session logs via the API.
 """
 import requests
 import json
+import os
 from datetime import datetime
 
 API_BASE = "http://localhost:8000"
+API_KEY = os.environ.get("PASSWORD", "talktomegoose")
 
 def list_sessions():
     """List all available session logs."""
     url = f"{API_BASE}/api/sessions"
     
+    headers = {
+        "X-API-Key": API_KEY
+    }
+    
     try:
-        response = requests.get(url)
+        response = requests.get(url, headers=headers)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
@@ -24,8 +30,12 @@ def list_terminal_sessions():
     """List all active tmux sessions."""
     url = f"{API_BASE}/api/terminal/sessions"
     
+    headers = {
+        "X-API-Key": API_KEY
+    }
+    
     try:
-        response = requests.get(url)
+        response = requests.get(url, headers=headers)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:

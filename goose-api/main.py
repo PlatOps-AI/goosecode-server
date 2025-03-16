@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Header, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 import subprocess
 import os
@@ -10,11 +11,23 @@ from typing import List, Optional, Dict, Any, AsyncGenerator
 import glob
 import asyncio
 
+# Load password from environment variable
+API_PASSWORD = os.environ.get("PASSWORD", "talktomegoose")
+API_KEY_HEADER = APIKeyHeader(name="X-API-Key", auto_error=False)
+
 app = FastAPI(
     title="Goose Terminal API",
-    description="API for interacting with Goose terminal sessions and logs",
+    description="API for interacting with Goose terminal sessions and logs. All endpoints require authentication using the X-API-Key header with the correct API key.",
     version="0.1.0"
 )
+
+# Authentication dependency
+async def verify_api_key(api_key: str = Security(API_KEY_HEADER)):
+    if not api_key:
+        raise HTTPException(status_code=401, detail="API Key header is missing")
+    if api_key != API_PASSWORD:
+        raise HTTPException(status_code=403, detail="Invalid API Key")
+    return api_key
 
 # Enable CORS for local development
 app.add_middleware(
@@ -279,7 +292,7 @@ async def sse_generator(stream_request: StreamRequest) -> AsyncGenerator[str, No
         print(f"Stream error: {error_msg}")
         yield f"event: error\ndata: {json.dumps({'error': error_msg})}\n\n"
 
-@app.post("/api/stream", summary="Stream Goose session updates using Server-Sent Events (SSE)")
+@app.post("/api/stream", summary="Stream Goose session updates using Server-Sent Events (SSE)", dependencies=[Depends(verify_api_key)])
 async def stream_session(request: StreamRequest):
     """
     Stream Goose session updates and automatically close after receiving assistant response.
@@ -291,7 +304,7 @@ async def stream_session(request: StreamRequest):
 
 # --- Health Check Endpoint ---
 
-@app.get("/api/ping", summary="Health check endpoint")
+@app.get("/api/ping", summary="Health check endpoint", dependencies=[Depends(verify_api_key)])
 async def ping():
     """
     Comprehensive health check endpoint that verifies:
@@ -347,7 +360,7 @@ async def ping():
 
 # --- Terminal Endpoints ---
 
-@app.post("/api/terminal/send", summary="Send a command to the tmux terminal")
+@app.post("/api/terminal/send", summary="Send a command to the tmux terminal", dependencies=[Depends(verify_api_key)])
 async def send_terminal_input(command_data: TerminalCommand):
     """
     Send a command to the specified tmux session and window.
@@ -374,7 +387,7 @@ async def send_terminal_input(command_data: TerminalCommand):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/terminal/sessions", summary="List all tmux sessions")
+@app.get("/api/terminal/sessions", summary="List all tmux sessions", dependencies=[Depends(verify_api_key)])
 async def list_tmux_sessions():
     """
     List all active tmux sessions on the system.
@@ -406,7 +419,7 @@ async def list_tmux_sessions():
 
 # --- Logs Endpoints ---
 
-@app.get("/api/sessions", response_model=List[SessionInfo], summary="List all session log files")
+@app.get("/api/sessions", response_model=List[SessionInfo], summary="List all session log files", dependencies=[Depends(verify_api_key)])
 async def list_sessions():
     """
     List all available Goose session log files.
@@ -431,7 +444,7 @@ async def list_sessions():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/sessions/{session_id}", summary="Get contents of a specific session log")
+@app.get("/api/sessions/{session_id}", summary="Get contents of a specific session log", dependencies=[Depends(verify_api_key)])
 async def get_session_log(session_id: str, format: str = "json"):
     """
     Get the contents of a specific session log file.
@@ -465,7 +478,7 @@ async def get_session_log(session_id: str, format: str = "json"):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/sessions/latest/id", summary="Get the ID of the most recent session")
+@app.get("/api/sessions/latest/id", summary="Get the ID of the most recent session", dependencies=[Depends(verify_api_key)])
 async def get_latest_session_id():
     """
     Get the ID of the most recently modified session log file.

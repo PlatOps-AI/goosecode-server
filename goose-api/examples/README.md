@@ -2,6 +2,20 @@
 
 This directory contains example scripts that demonstrate how to interact with the Goose Terminal API.
 
+## Authentication
+
+All API endpoints now require authentication using an API key. The examples in this directory read the API key from the `PASSWORD` environment variable, defaulting to `talktomegoose` if not set.
+
+To use a different API key:
+
+```bash
+# Set the API key for your session
+export PASSWORD=your_custom_password
+
+# Or use it just for a single command
+PASSWORD=your_custom_password python streaming.py "Hello"
+```
+
 ## Available Examples
 
 ### streaming.py
